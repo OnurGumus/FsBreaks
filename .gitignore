@@ -1,0 +1,8 @@
+bin/
+obj/
+.fsbreaks/
+nupkg/
+.DS_Store
+.vs/
+.idea/
+*.user

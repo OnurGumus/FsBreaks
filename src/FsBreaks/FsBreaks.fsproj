@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>fsbreaks</ToolCommandName>
+    <PackageId>FsBreaks</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Onur Gumus</Authors>
+    <Description>Does a test fail when the rule it guards is switched off? Hand-written breaks, one per rule, tried one at a time against the tests that claim to guard them: mutation testing by intent, for F#.</Description>
+    <PackageTags>fsharp;mutation-testing;testing;dotnet-tool</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/OnurGumus/FsBreaks</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/OnurGumus/FsBreaks</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReleaseNotes>https://github.com/OnurGumus/FsBreaks/blob/main/CHANGELOG.md</PackageReleaseNotes>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Text.fs" />
+    <Compile Include="Breaks.fs" />
+    <Compile Include="Syntax.fs" />
+    <Compile Include="Suggest.fs" />
+    <Compile Include="Config.fs" />
+    <Compile Include="Runner.fs" />
+    <Compile Include="Check.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FSharp.Core" />
+    <PackageReference Include="FSharp.Compiler.Service" />
+    <PackageReference Include="Ionide.ProjInfo" />
+    <PackageReference Include="Ionide.ProjInfo.FCS" />
+    <!-- The SDK's own MSBuild is loaded at run time (Ionide.ProjInfo.Init). -->
+    <PackageReference Include="Microsoft.Build" ExcludeAssets="runtime" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Build.Framework" ExcludeAssets="runtime" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

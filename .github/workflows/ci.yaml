@@ -1,0 +1,61 @@
+# Build FsBreaks, run its tests and its own breaks, and - on main, after they
+# pass - publish the tool if its version isn't on nuget.org yet
+# (--skip-duplicate makes an already-published version a no-op, so publishing
+# is driven by bumping <Version> in src/FsBreaks/FsBreaks.fsproj).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build
+        run: dotnet build test/FsBreaks.Tests -c Release
+      - name: Tests
+        run: dotnet run --project test/FsBreaks.Tests -c Release --no-build
+      - name: Its own breaks, checked
+        run: dotnet run --project src/FsBreaks -c Release --no-build -- check
+      - name: Its own breaks, tried
+        run: dotnet run --project src/FsBreaks -c Release --no-build -- run
+
+  publish:
+    needs: test
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # OIDC token for NuGet Trusted Publishing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Pack
+        run: dotnet pack src/FsBreaks -c Release -o ./nupkgs
+      # Trusted Publishing: exchanges the workflow's OIDC identity for a
+      # short-lived nuget.org key - no stored secrets. Requires a Trusted
+      # Publishing policy on nuget.org (owner ReverseBlade -> repo
+      # OnurGumus/FsBreaks -> workflow ci.yaml).
+      - name: NuGet login (Trusted Publishing)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ReverseBlade
+      - name: Push (skip an already-published version)
+        run: |
+          for pkg in ./nupkgs/FsBreaks.[0-9]*.nupkg; do
+            echo "pushing $pkg"
+            dotnet nuget push "$pkg" \
+              --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done

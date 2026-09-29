@@ -1,0 +1,44 @@
+# FsBreaks' own rules, and the tests that guard them. CI tries them with the
+# Release build of the tool, which the Debug builds of the tests don't touch:
+#
+#   dotnet run --project src/FsBreaks -c Release -- run
+
+test: test/FsBreaks.Tests
+
+## A text found more than once is stale, not broken where it is first found
+src/FsBreaks/Syntax.fs
+in locate
+- | [ at ] -> Ok at
++ | at :: _ -> Ok at
+
+## An anchor narrows the search to the binding it names
+src/FsBreaks/Syntax.fs
+in find
+- List.filter (isNamed anchor)
++ List.filter (fun _ -> true)
+
+## A break every test passes on is missed
+src/FsBreaks/Runner.fs
+in tryBreak
+- | Passed -> Missed $"every test in {guard.Project} still passes"
++ | Passed -> Caught $"every test in {guard.Project} still passes"
+
+## The file is put back after its break is tried
+src/FsBreaks/Runner.fs
+in tryBreak
+-             finally
+-                 putBack ()
++             finally
++                 ()
+
+## A filter that runs no test is told, not taken for a pass
+src/FsBreaks/Runner.fs
+in outcomeOf
+- if nothingPatterns |> List.exists (fun p -> Regex.IsMatch(out, p)) then RanNothing
++ if false then RanNothing
+
+## A condition is broken as a condition, not turned around too
+src/FsBreaks/Suggest.fs
+in standsAlone
+- not (isCondition path expr) &&
++ true &&
